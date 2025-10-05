@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2196F3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Monitor de Temblor Parkinson</title>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1vbml0b3IgZGUgVGVtYmxvciBQYXJraW5zb24iLAogICJzaG9ydF9uYW1lIjogIlRlbWJsb3IiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgInRoZW1lX2NvbG9yIjogIiMyMTk2RjMiLAogICJpY29ucyI6IFt7CiAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbCwlM0NzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTAwIDEwMCclM0UlM0NjaXJjbGUgY3g9JzUwJyBjeT0nNTAnIHI9JzQ1JyBmaWxsPSclMjMyMTk2RjMnLyUzRSUzQ3RleHQgeD0nNTAlMjUnIHk9JzY1JTI1JyBmb250LXNpemU9JzUwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmaWxsPSd3aGl0ZSclM0Xwn5SxJTNDL3RleHQlM0UlM0Mvc3ZnJTNFIiwKICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgfV0KfQ==">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #2196F3;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .metric-display {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .metric-value {
+            font-size: 48px;
+            font-weight: bold;
+            color: #FF5722;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50 0%, #FFC107 50%, #FF5722 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: white;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .frequency-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .frequency-item {
+            text-align: center;
+        }
+
+        .frequency-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        .instructions {
+            background: #E3F2FD;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid #2196F3;
+            margin-top: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .history-time {
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        .history-level {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .level-0 { color: #4CAF50; }
+        .level-1 { color: #8BC34A; }
+        .level-2 { color: #FFC107; }
+        .level-3 { color: #FF9800; }
+        .level-4 { color: #FF5722; }
+
+        .chart-container {
+            margin: 20px 0;
+            height: 200px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 15px;
+            position: relative;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #2196F3;
+            color: white;
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .export-info {
+            background: #E8F5E9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 13px;
+            text-align: center;
+            color: #2E7D32;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            }
+        }
+
+        .real-time-viz {
+            height: 150px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            margin: 20px 0;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wave-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wave-line {
+            width: 100%;
+            height: 2px;
+            background: #2196F3;
+            position: relative;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(2); }
+        }
+
+        .pulsing {
+            animation: pulse 0.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Tab Navigation -->
+        <div class="card">
+            <h1>📱 Monitor de Temblor</h1>
+            <p class="subtitle">Control de Parkinson</p>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('monitor')">Monitor</button>
+                <button class="tab" onclick="switchTab('history')">Historial</button>
+            </div>
+        </div>
+
+        <!-- Monitor Tab -->
+        <div id="monitor-tab" class="tab-content active">
+            <div class="card">
+                <div class="status" id="status">
+                    Presione "Iniciar" para comenzar
+                </div>
+
+                <div class="metric-display">
+                    <div class="metric-label">Nivel de Temblor</div>
+                    <div class="metric-value" id="tremorLevel">0.0</div>
+                    <div style="font-size: 18px; color: #666;">/10</div>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%">
+                        0%
+                    </div>
+                </div>
+
+                <div class="real-time-viz" id="realTimeViz" style="display: none;">
+                    <canvas id="waveCanvas" width="400" height="120"></canvas>
+                </div>
+
+                <div class="frequency-info">
+                    <div class="frequency-item">
+                        <div class="frequency-value" id="frequency">--</div>
+                        <div>Frecuencia (Hz)</div>
+                    </div>
+                    <div class="frequency-item">
+                        <div class="frequency-value" id="amplitude">--</div>
+                        <div>Amplitud</div>
+                    </div>
+                    <div class="frequency-item">
+                        <div class="frequency-value" id="sampleCount">0</div>
+                        <div>Muestras</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="startBtn" onclick="startMonitoring()">
+                    ▶️ Iniciar Medición
+                </button>
+
+                <div class="instructions">
+                    <strong>📋 Instrucciones:</strong><br>
+                    1. Sostenga el teléfono con la mano que desea medir<br>
+                    2. Mantenga el brazo extendido frente a usted<br>
+                    3. Presione "Iniciar" y permanezca quieto 30 segundos<br>
+                    4. La app medirá el temblor automáticamente
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="history-tab" class="tab-content">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">📊 Resumen del Día</h2>
+                
+                <div class="summary-stats" id="summaryStats">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="historyChart"></canvas>
+                </div>
+
+                <h3 style="margin: 20px 0 15px 0;">Mediciones de Hoy</h3>
+                <div id="historyList">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+
+                <button class="btn btn-secondary" onclick="exportData()">
+                    📤 Exportar Datos para Médico
+                </button>
+
+                <div class="export-info">
+                    Los datos se copiarán al portapapeles en formato CSV
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let isMonitoring = false;
+        let samples = [];
+        let timestamps = [];
+        let measurements = [];
+        let animationId = null;
+        let startTime = 0;
+        const MONITORING_DURATION = 30000; // 30 segundos
+        const SAMPLE_RATE = 100; // Hz aproximado
+
+        // Cargar mediciones guardadas
+        function loadMeasurements() {
+            const saved = localStorage.getItem('parkinson_measurements');
+            if (saved) {
+                measurements = JSON.parse(saved);
+                // Filtrar solo las de hoy
+                const today = new Date().toDateString();
+                measurements = measurements.filter(m => 
+                    new Date(m.timestamp).toDateString() === today
+                );
+            }
+        }
+
+        // Guardar medición
+        function saveMeasurement(data) {
+            measurements.push(data);
+            localStorage.setItem('parkinson_measurements', JSON.stringify(measurements));
+        }
+
+        // Iniciar monitoreo
+        function startMonitoring() {
+            // Verificar soporte de acelerómetro
+            if (!window.DeviceMotionEvent) {
+                alert('❌ Tu dispositivo no soporta el acelerómetro');
+                return;
+            }
+
+            // Solicitar permisos en iOS
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                DeviceMotionEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            beginMonitoring();
+                        } else {
+                            alert('❌ Se necesitan permisos para acceder al acelerómetro');
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                beginMonitoring();
+            }
+        }
+
+        function beginMonitoring() {
+            isMonitoring = true;
+            samples = [];
+            timestamps = [];
+            startTime = Date.now();
+
+            document.getElementById('startBtn').textContent = '🛑 Detener';
+            document.getElementById('startBtn').className = 'btn btn-stop';
+            document.getElementById('startBtn').onclick = stopMonitoring;
+            document.getElementById('status').textContent = '📊 Monitoreando... Mantenga el teléfono firme';
+            document.getElementById('realTimeViz').style.display = 'block';
+
+            // Iniciar canvas
+            initCanvas();
+
+            // Escuchar eventos del acelerómetro
+            window.addEventListener('devicemotion', handleMotion);
+
+            // Timer para detener automáticamente
+            setTimeout(() => {
+                if (isMonitoring) {
+                    stopMonitoring();
+                }
+            }, MONITORING_DURATION);
+
+            // Actualizar contador
+            updateTimer();
+        }
+
+        function updateTimer() {
+            if (!isMonitoring) return;
+
+            const elapsed = Date.now() - startTime;
+            const remaining = Math.ceil((MONITORING_DURATION - elapsed) / 1000);
+            
+            if (remaining > 0) {
+                document.getElementById('status').textContent = 
+                    `📊 Monitoreando... ${remaining} segundos restantes`;
+                setTimeout(updateTimer, 1000);
+            }
+        }
+
+        function handleMotion(event) {
+            if (!isMonitoring) return;
+
+            const acc = event.accelerationIncludingGravity;
+            if (!acc) return;
+
+            const x = acc.x || 0;
+            const y = acc.y || 0;
+            const z = acc.z || 0;
+
+            // Calcular magnitud
+            const magnitude = Math.sqrt(x*x + y*y + z*z);
+
+            samples.push({ x, y, z, magnitude });
+            timestamps.push(Date.now());
+
+            // Mantener solo últimos 500 samples (~5 segundos)
+            if (samples.length > 500) {
+                samples.shift();
+                timestamps.shift();
+            }
+
+            // Actualizar UI cada 5 samples
+            if (samples.length % 5 === 0) {
+                updateRealTimeMetrics();
+                drawWave();
+            }
+        }
+
+        function updateRealTimeMetrics() {
+            if (samples.length < 50) return;
+
+            const metrics = calculateTremorMetrics(samples);
+            
+            document.getElementById('tremorLevel').textContent = metrics.severityLevel.toFixed(1);
+            document.getElementById('frequency').textContent = metrics.dominantFrequency.toFixed(2);
+            document.getElementById('amplitude').textContent = metrics.amplitudeRMS.toFixed(2);
+            document.getElementById('sampleCount').textContent = samples.length;
+
+            const progress = Math.min(100, (metrics.severityLevel / 10) * 100);
+            const fill = document.getElementById('progressFill');
+            fill.style.width = progress + '%';
+            fill.textContent = Math.round(progress) + '%';
+        }
+
+        function stopMonitoring() {
+            isMonitoring = false;
+            window.removeEventListener('devicemotion', handleMotion);
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+
+            document.getElementById('startBtn').textContent = '▶️ Iniciar Medición';
+            document.getElementById('startBtn').className = 'btn btn-primary';
+            document.getElementById('startBtn').onclick = startMonitoring;
+            document.getElementById('realTimeViz').style.display = 'none';
+
+            // Analizar resultados finales
+            if (samples.length > 100) {
+                const metrics = calculateTremorMetrics(samples);
+                displayResults(metrics);
+                
+                // Guardar medición
+                const measurement = {
+                    timestamp: Date.now(),
+                    ...metrics,
+                    interpretation: interpretLevel(metrics.severityLevel)
+                };
+                saveMeasurement(measurement);
+                
+                // Actualizar historial
+                updateHistory();
+            } else {
+                document.getElementById('status').textContent = 
+                    '⚠️ Medición muy corta. Intente de nuevo.';
+            }
+        }
+
+        function calculateTremorMetrics(sampleData) {
+            // Extraer magnitudes
+            const magnitudes = sampleData.map(s => s.magnitude);
+            
+            // Remover componente DC (gravedad)
+            const mean = magnitudes.reduce((a, b) => a + b, 0) / magnitudes.length;
+            const filtered = magnitudes.map(m => m - mean);
+
+            // Calcular RMS (amplitud)
+            const rms = Math.sqrt(
+                filtered.reduce((sum, val) => sum + val * val, 0) / filtered.length
+            );
+
+            // Análisis de frecuencia simplificado (autocorrelación)
+            const { frequency, power } = findDominantFrequency(filtered);
+
+            // Calcular severidad (0-10)
+            const severity = calculateSeverity(rms, frequency, power);
+
+            return {
+                amplitudeRMS: rms,
+                dominantFrequency: frequency,
+                tremorPower: power,
+                severityLevel: severity
+            };
+        }
+
+        function findDominantFrequency(data) {
+            const n = data.length;
+            if (n < 50) return { frequency: 0, power: 0 };
+
+            let maxCorr = 0;
+            let dominantFreq = 0;
+
+            // Buscar en rango de Parkinson (3-8 Hz)
+            for (let freq = 30; freq <= 80; freq++) {
+                const period = Math.floor(SAMPLE_RATE / (freq / 10));
+                if (period >= n) continue;
+
+                let corr = 0;
+                for (let i = 0; i < n - period; i++) {
+                    corr += Math.abs(data[i] * data[i + period]);
+                }
+
+                if (corr > maxCorr) {
+                    maxCorr = corr;
+                    dominantFreq = freq / 10;
+                }
+            }
+
+            return {
+                frequency: dominantFreq,
+                power: maxCorr / n
+            };
+        }
+
+        function calculateSeverity(rms, frequency, power) {
+            let score = 0;
+
+            // Factor amplitud (40%)
+            if (rms < 0.5) score += 0;
+            else if (rms < 1.0) score += 1.5;
+            else if (rms < 2.0) score += 3.0;
+            else if (rms < 3.0) score += 5.0;
+            else score += 7.0;
+            score *= 0.4;
+
+            // Factor frecuencia (30%)
+            if (frequency >= 3 && frequency <= 8) {
+                score += 3.0; // Rango Parkinson
+            } else if (frequency >= 2 && frequency <= 10) {
+                score += 1.5;
+            }
+
+            // Factor potencia (30%)
+            if (power < 0.1) score += 0;
+            else if (power < 0.5) score += 1.0;
+            else if (power < 1.0) score += 2.0;
+            else score += 3.0;
+
+            return Math.min(10, Math.max(0, score));
+        }
+
+        function interpretLevel(level) {
+            if (level < 2) return '✅ Temblor mínimo o ausente';
+            if (level < 4) return '🟡 Temblor leve';
+            if (level < 7) return '🟠 Temblor moderado';
+            return '🔴 Temblor significativo';
+        }
+
+        function displayResults(metrics) {
+            const interpretation = interpretLevel(metrics.severityLevel);
+            document.getElementById('status').innerHTML = 
+                `✅ Medición completada<br>${interpretation}`;
+        }
+
+        // Visualización en tiempo real
+        let canvas, ctx;
+
+        function initCanvas() {
+            canvas = document.getElementById('waveCanvas');
+            ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 120;
+        }
+
+        function drawWave() {
+            if (!ctx || samples.length < 2) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerY = height / 2;
+
+            // Tomar últimos 100 samples
+            const displaySamples = samples.slice(-100);
+            const step = width / displaySamples.length;
+
+            // Normalizar y dibujar
+            ctx.beginPath();
+            ctx.strokeStyle = '#2196F3';
+            ctx.lineWidth = 2;
+
+            displaySamples.forEach((sample, i) => {
+                const x = i * step;
+                const normalized = (sample.magnitude - 9.8) * 10; // Centrar en gravedad
+                const y = centerY + normalized;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+
+            ctx.stroke();
+
+            // Línea de referencia
+            ctx.beginPath();
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(width, centerY);
+            ctx.stroke();
+        }
+
+        // Sistema de pestañas
+        function switchTab(tabName) {
+            // Actualizar botones
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Actualizar contenido
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + '-tab').classList.add('active');
+
+            if (tabName === 'history') {
+                updateHistory();
+            }
+        }
+
+        // Actualizar historial
+        function updateHistory() {
+            loadMeasurements();
+
+            if (measurements.length === 0) {
+                document.getElementById('summaryStats').innerHTML = 
+                    '<div class="no-data">No hay mediciones hoy</div>';
+                document.getElementById('historyList').innerHTML = 
+                    '<div class="no-data">Realice su primera medición</div>';
+                return;
+            }
+
+            // Estadísticas
+            const levels = measurements.map(m => m.severityLevel);
+            const avg = levels.reduce((a, b) => a + b, 0) / levels.length;
+            const max = Math.max(...levels);
+            const min = Math.min(...levels);
+
+            document.getElementById('summaryStats').innerHTML = `
+                <div class="stat-box">
+                    <div class="stat-value">${avg.toFixed(1)}</div>
+                    <div class="stat-label">Promedio</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">${max.toFixed(1)}</div>
+                    <div class="stat-label">Máximo</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">${min.toFixed(1)}</div>
+                    <div class="stat-label">Mínimo</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">${measurements.length}</div>
+                    <div class="stat-label">Mediciones</div>
+                </div>
+            `;
+
+            // Lista de mediciones
+            const historyHTML = measurements.map(m => {
+                const date = new Date(m.timestamp);
+                const time = date.toLocaleTimeString('es-ES', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                const levelClass = `level-${Math.floor(m.severityLevel / 2.5)}`;
+                
+                return `
+                    <div class="history-item">
+                        <div>
+                            <div class="history-time">${time}</div>
+                            <div style="font-size: 12px; color: #666;">
+                                ${m.dominantFrequency.toFixed(2)} Hz
+                            </div>
+                        </div>
+                        <div>
+                            <div class="history-level ${levelClass}">
+                                ${m.severityLevel.toFixed(1)}/10
+                            </div>
+                            <div style="font-size: 11px; text-align: right;">
+                                ${m.interpretation}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).reverse().join('');
+
+            document.getElementById('historyList').innerHTML = historyHTML;
+
+            // Dibujar gráfico simple
+            drawHistoryChart();
+        }
+
+        function drawHistoryChart() {
+            const canvas = document.getElementById('historyChart');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 170;
+
+            if (measurements.length === 0) return;
+
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 30;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Ejes
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+
+            // Líneas de referencia horizontal
+            for (let i = 0; i <= 10; i += 2) {
+                const y = height - padding - (i / 10) * (height - 2 * padding);
+                ctx.strokeStyle = '#f0f0f0';
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+
+                // Etiquetas
+                ctx.fillStyle = '#999';
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(i.toString(), padding - 5, y + 3);
+            }
+
+            // Dibujar línea de datos
+            const step = (width - 2 * padding) / (measurements.length - 1);
+            ctx.strokeStyle = '#2196F3';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+
+            measurements.forEach((m, i) => {
+                const x = padding + i * step;
+                const y = height - padding - (m.severityLevel / 10) * (height - 2 * padding);
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+
+                // Puntos
+                ctx.fillStyle = '#2196F3';
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.stroke();
+
+            // Etiquetas de tiempo
+            ctx.fillStyle = '#666';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'center';
+            
+            [0, Math.floor(measurements.length / 2), measurements.length - 1].forEach(i => {
+                if (measurements[i]) {
+                    const date = new Date(measurements[i].timestamp);
+                    const time = date.toLocaleTimeString('es-ES', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                    const x = padding + i * step;
+                    ctx.fillText(time, x, height - 5);
+                }
+            });
+        }
+
+        // Exportar datos
+        function exportData() {
+            if (measurements.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+
+            // Crear CSV
+            let csv = 'Fecha,Hora,Nivel de Temblor (0-10),Frecuencia (Hz),Amplitud,Interpretación\n';
+            
+            measurements.forEach(m => {
+                const date = new Date(m.timestamp);
+                const dateStr = date.toLocaleDateString('es-ES');
+                const timeStr = date.toLocaleTimeString('es-ES');
+                
+                csv += `${dateStr},${timeStr},${m.severityLevel.toFixed(2)},${m.dominantFrequency.toFixed(2)},${m.amplitudeRMS.toFixed(3)},"${m.interpretation}"\n`;
+            });
+
+            // Estadísticas al final
+            const levels = measurements.map(m => m.severityLevel);
+            const avg = levels.reduce((a, b) => a + b, 0) / levels.length;
+            const max = Math.max(...levels);
+            const min = Math.min(...levels);
+
+            csv += `\nEstadísticas del día:\n`;
+            csv += `Promedio,${avg.toFixed(2)}\n`;
+            csv += `Máximo,${max.toFixed(2)}\n`;
+            csv += `Mínimo,${min.toFixed(2)}\n`;
+            csv += `Total de mediciones,${measurements.length}\n`;
+
+            // Copiar al portapapeles
+            navigator.clipboard.writeText(csv).then(() => {
+                alert('✅ Datos copiados al portapapeles.\n\nPuedes pegarlos en un correo o documento para tu médico.');
+            }).catch(err => {
+                // Fallback: mostrar en alert
+                prompt('Copia estos datos para tu médico:', csv);
+            });
+
+            // También ofrecer descarga
+            downloadCSV(csv);
+        }
+
+        function downloadCSV(csv) {
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            const date = new Date().toISOString().split('T')[0];
+            link.setAttribute('href', url);
+            link.setAttribute('download', `temblor_parkinson_${date}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Instalar como PWA
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Mostrar botón de instalación
+            const installBtn = document.createElement('button');
+            installBtn.className = 'btn btn-secondary';
+            installBtn.textContent = '📲 Instalar como App';
+            installBtn.onclick = installApp;
+            
+            document.querySelector('.container').insertBefore(
+                installBtn, 
+                document.querySelector('.container').firstChild
+            );
+        });
+
+        function installApp() {
+            if (!deferredPrompt) return;
+            
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('PWA instalada');
+                }
+                deferredPrompt = null;
+            });
+        }
+
+        // Inicialización
+        window.addEventListener('load', () => {
+            loadMeasurements();
+            
+            // Verificar soporte
+            if (!window.DeviceMotionEvent) {
+                document.getElementById('status').innerHTML = 
+                    '⚠️ Tu navegador no soporta el acelerómetro.<br>Prueba con Chrome o Safari.';
+                document.getElementById('startBtn').disabled = true;
+            }
+        });
+
+        // Prevenir sleep durante monitoreo
+        let wakeLock = null;
+
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {
+                console.log('Wake Lock no disponible:', err);
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+            }
+        }
+
+        // Modificar beginMonitoring para usar wake lock
+        const originalBeginMonitoring = beginMonitoring;
+        beginMonitoring = function() {
+            requestWakeLock();
+            originalBeginMonitoring();
+        };
+
+        // Modificar stopMonitoring para liberar wake lock
+        const originalStopMonitoring = stopMonitoring;
+        stopMonitoring = function() {
+            releaseWakeLock();
+            originalStopMonitoring();
+        };
+
+        // Service Worker para funcionalidad offline
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZSA9PiB7CiAgc2VsZi5za2lwV2FpdGluZygpOwp9KTsKCnNlbGYuYWRkRXZlbnRMaXN0ZW5lcignZmV0Y2gnLCBlID0+IHsKICBlLnJlc3BvbmRXaXRoKAogICAgZmV0Y2goZS5yZXF1ZXN0KS5jYXRjaCgoKSA9PiBjYWNoZXMubWF0Y2goZS5yZXF1ZXN0KSkKICApOwp9KTs=')
+                .then(() => console.log('Service Worker registrado'))
+                .catch(err => console.log('Service Worker error:', err));
+        }
+    </script>
+</body>
+</html>
