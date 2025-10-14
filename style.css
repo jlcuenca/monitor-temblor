@@ -208,6 +208,11 @@ h1 {
     margin-bottom: 10px;
 }
 
+.history-item-error {
+    background-color: #fff0f0;
+    border-left: 4px solid var(--accent-color);
+}
+
 .history-time {
     font-weight: 700;
     color: var(--text-primary);

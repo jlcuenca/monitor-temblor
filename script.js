@@ -194,6 +194,14 @@ function stopMonitoring() {
     } else {
         dom.status.textContent = 
             '⚠️ Medición muy corta. Intente de nuevo.';
+        // Guardar el intento fallido en el historial
+        const failedMeasurement = {
+            timestamp: Date.now(),
+            error: true,
+            interpretation: 'Error: Medición muy corta'
+        };
+        saveMeasurement(failedMeasurement);
+        updateHistory();
     }
 }
 
@@ -419,26 +427,39 @@ function updateHistory() {
             hour: '2-digit', 
             minute: '2-digit' 
         });
-        const levelClass = `level-${Math.floor(m.severityLevel / 2.5)}`;
-        
-        return `
-            <div class="history-item">
-                <div>
-                    <div class="history-time">${time}</div>
-                    <div style="font-size: 12px; color: #666;">
-                        ${m.dominantFrequency.toFixed(2)} Hz
+
+        if (m.error) {
+            return `
+                <div class="history-item history-item-error">
+                    <div>
+                        <div class="history-time">${time}</div>
                     </div>
-                </div>
-                <div>
-                    <div class="history-level ${levelClass}">
-                        ${m.severityLevel.toFixed(1)}/10
-                    </div>
-                    <div style="font-size: 11px; text-align: right;">
+                    <div style="font-size: 14px; color: var(--accent-color); text-align: right; font-weight: 500;">
                         ${m.interpretation}
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        } else {
+            const levelClass = `level-${Math.floor(m.severityLevel / 2.5)}`;
+            return `
+                <div class="history-item">
+                    <div>
+                        <div class="history-time">${time}</div>
+                        <div style="font-size: 12px; color: #666;">
+                            ${m.dominantFrequency.toFixed(2)} Hz
+                        </div>
+                    </div>
+                    <div>
+                        <div class="history-level ${levelClass}">
+                            ${m.severityLevel.toFixed(1)}/10
+                        </div>
+                        <div style="font-size: 11px; text-align: right;">
+                            ${m.interpretation}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
     }).reverse().join('');
 
     document.getElementById('historyList').innerHTML = historyHTML;
