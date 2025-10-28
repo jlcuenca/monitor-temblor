@@ -342,8 +342,8 @@ function drawWave() {
 
     displaySamples.forEach((sample, i) => {
         const x = i * step;
-        // --- AJUSTE DE SENSIBILIDAD VISUAL --- Se aumenta el multiplicador de 10 a 25
-        const normalized = (sample.magnitude - 9.8) * 25; // Centrar en gravedad y amplificar
+        // --- AJUSTE DE SENSIBILIDAD VISUAL --- Aumentamos drásticamente para feedback inmediato
+        const normalized = (sample.magnitude - 9.8) * 150; // Un valor alto para exagerar el movimiento
         const y = centerY + normalized;
         
         if (i === 0) {
