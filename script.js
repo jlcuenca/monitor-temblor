@@ -1,4 +1,5 @@
 // Constantes
+const APP_VERSION = "1.1";
 const MONITORING_DURATION = 10000; // 10 segundos para pruebas rápidas
 const SAMPLE_RATE = 100; // Hz aproximado
 
@@ -42,16 +43,17 @@ function saveMeasurement(data) {
 }
 
 // Iniciar monitoreo
-function startMonitoring() {
+function handleStartStop() {
+    if (state.isMonitoring) {
+        stopMonitoring();
+        return;
+    }
+
     // Verificar soporte de acelerómetro
     if (!window.DeviceMotionEvent) {
         alert('❌ Tu dispositivo no soporta el acelerómetro');
         return;
     }
-
-    // Feedback visual inmediato
-    dom.startBtn.disabled = true;
-    dom.startBtn.innerHTML = '<span>⌛</span> Solicitando permisos...';
 
     // Solicitar permisos en iOS
     if (typeof DeviceMotionEvent.requestPermission === 'function') {
@@ -60,15 +62,11 @@ function startMonitoring() {
                 if (permissionState === 'granted') {
                     beginMonitoring();
                 } else {
-                    dom.startBtn.disabled = false;
-                    dom.startBtn.innerHTML = '▶️ Iniciar Medición';
                     alert('❌ Se necesitan permisos para acceder al acelerómetro');
                 }
             })
             .catch(err => {
                 console.error(err);
-                dom.startBtn.disabled = false;
-                dom.startBtn.innerHTML = '▶️ Iniciar Medición';
                 alert('❌ Ocurrió un error al solicitar permisos.');
             });
     } else {
@@ -76,7 +74,10 @@ function startMonitoring() {
     }
 }
 
-function beginMonitoring() {
+async function beginMonitoring() {
+    // Prevenir que la pantalla se apague
+    await requestWakeLock();
+
     state.isMonitoring = true;
     state.samples = [];
     state.timestamps = [];
@@ -164,7 +165,10 @@ function updateRealTimeMetrics() {
     fill.style.backgroundColor = getSeverityColor(metrics.severityLevel);
 }
 
-function stopMonitoring() {
+async function stopMonitoring() {
+    // Liberar el bloqueo de pantalla
+    await releaseWakeLock();
+
     state.isMonitoring = false;
     window.removeEventListener('devicemotion', handleMotion);
     
@@ -175,6 +179,13 @@ function stopMonitoring() {
     dom.startBtn.innerHTML = '▶️ Iniciar Medición';
     dom.startBtn.className = 'btn btn-primary';
     dom.realTimeViz.style.display = 'none';
+
+    // Resetear visuales
+    document.getElementById('progressFill').style.width = '0%';
+    document.getElementById('tremorLevel').textContent = '0.0';
+    document.getElementById('frequency').textContent = '--';
+    document.getElementById('amplitude').textContent = '--';
+    document.getElementById('sampleCount').textContent = '0';
 
     // Analizar resultados finales
     if (state.samples.length > 100) {
@@ -636,6 +647,11 @@ function installApp() {
     });
 }
 
+function setVersion() {
+    const versionElement = document.querySelector('.version-footer');
+    if (versionElement) versionElement.textContent = `App v${APP_VERSION}`;
+}
+
 // Inicialización
 function initializeApp() {
     loadMeasurements();
@@ -648,44 +664,33 @@ function initializeApp() {
     }
 
     // Adjuntar eventos
-    dom.startBtn.addEventListener('click', startMonitoring);
+    dom.startBtn.addEventListener('click', handleStartStop);
     dom.exportBtn.addEventListener('click', exportData);
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', (e) => switchTab(e, e.currentTarget.dataset.tab));
     });
+
+    setVersion();
 }
 
 // Prevenir sleep durante monitoreo
 async function requestWakeLock() {
     try {
         if ('wakeLock' in navigator) {
+            if (state.wakeLock) await state.wakeLock.release();
             state.wakeLock = await navigator.wakeLock.request('screen');
         }
     } catch (err) {
-        console.log('Wake Lock no disponible:', err);
+        console.warn('Wake Lock no disponible:', err);
     }
 }
 
-// Modificar beginMonitoring para usar wake lock
-const originalBeginMonitoring = beginMonitoring;
-beginMonitoring = function() {
-    requestWakeLock();
-    dom.startBtn.removeEventListener('click', startMonitoring);
-    dom.startBtn.addEventListener('click', stopMonitoring);
-    originalBeginMonitoring();
-};
-
-// Modificar stopMonitoring para liberar wake lock
-const originalStopMonitoring = stopMonitoring;
-stopMonitoring = function() {
+async function releaseWakeLock() {
     if (state.wakeLock) {
-        state.wakeLock.release();
+        await state.wakeLock.release();
         state.wakeLock = null;
     }
-    dom.startBtn.removeEventListener('click', stopMonitoring);
-    dom.startBtn.addEventListener('click', startMonitoring);
-    originalStopMonitoring();
-};
+}
 
 // Service Worker para funcionalidad offline
 if ('serviceWorker' in navigator) {
@@ -695,4 +700,4 @@ if ('serviceWorker' in navigator) {
 }
 
 // Iniciar la aplicación cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', initializeApp);
+initializeApp();
