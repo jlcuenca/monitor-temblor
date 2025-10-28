@@ -134,6 +134,10 @@ h1 {
     gap: 10px;
 }
 
+.btn span {
+    font-size: 20px;
+}
+
 .btn:active {
     transform: scale(0.97);
 }
